@@ -123,8 +123,9 @@ class LW_Template
      */
     function extractBlock($block_name, $replace = true)
     {
+        $quoted = preg_quote($block_name);
         $pattern =
-            "/<!-- BEGIN $block_name -->\n?(.*?)<!-- END $block_name -->\n?/s";
+            "/<!-- BEGIN $quoted -->\n?(.*?)<!-- END $quoted -->\n?/s";
         preg_match($pattern, $this->_source, $matches);
         
         if($replace)
