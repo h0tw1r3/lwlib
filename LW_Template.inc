@@ -326,3 +326,4 @@ class LW_Template
             die('<b>Halted.</b>');
     }
 }
+?>
