@@ -315,14 +315,14 @@ class LW_Template
             if ($found) {
                 $block = $matches[2];
             } else {
-                $block = $matches[3];
+                $block = isset($matches[3]) ? $matches[3] : null;
             }
         /* multi-and-isset test */
         } elseif (strpos($matches[1],'&') > 0) {
             $all = true;
             $pieces = explode('&', str_replace(' ', '', $matches[1]));
             foreach ($pieces as $testvar) {
-                if (!isset($this->_locals[$testvar]) ||
+                if (!isset($this->_locals[$testvar]) &&
                         !isset($this->_globals[$testvar])) {
                     $all = false; break;
                 }
@@ -330,7 +330,7 @@ class LW_Template
             if ($all) {
                 $block = $matches[2];
             } else {
-                $block = $matches[3];
+                $block = isset($matches[3]) ? $matches[3] : null;
             }
         /* isset test */
         } else {
