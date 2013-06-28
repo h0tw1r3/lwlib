@@ -4,6 +4,7 @@
 // This file is part of lwlib.
 //
 // Copyright (C) 2002, 2003 John Winans and Joseph M. Link
+// Copyright (C) 2013 Jeffrey Clark
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,7 +27,8 @@ define('LW_FILENAME', 2);
 
 class LW_Template
 {
-    /* 'yes'        halt,
+    /*
+     * 'yes'        halt,
      * 'report'     report error, continue,
      * 'no'         ignore error quietly
      */
@@ -57,26 +59,25 @@ class LW_Template
     var $_debug = 0;
     var $_origin = '';
 
-    //*************************************************************************
     /**
-    * Constructor
-    *
-    * $template = new LW_Template($file_name);
-    *    Creates a new template object from the contents of the file $filename
-    *
-    * $template = new LW_Template($string, LW_STRING);
-    *    Creates a new template object from the contents of the string $string
-    *
-    * $template = new LW_Template($filename, LW_FILENAME, $template_obj);
-    *    Creates a new template object from the contents of the file $filename
-    *    The new object's 'global' variables is initialized to the contents of
-    *    the $template_obj's global AND local variables.
-    *
-    * $template = new LW_Template($string, LW_STRING, $template_obj);
-    *    Creates a new template object from the contents of the string $string
-    *    The new object's 'global' variables is initialized to the contents of
-    *    the $template_obj's global AND local variables.
-    */
+     * Constructor
+     *
+     * $template = new LW_Template($file_name);
+     *    Creates a new template object from the contents of the file $filename
+     *
+     * $template = new LW_Template($string, LW_STRING);
+     *    Creates a new template object from the contents of the string $string
+     *
+     * $template = new LW_Template($filename, LW_FILENAME, $template_obj);
+     *    Creates a new template object from the contents of the file $filename
+     *    The new object's 'global' variables is initialized to the contents of
+     *    the $template_obj's global AND local variables.
+     *
+     * $template = new LW_Template($string, LW_STRING, $template_obj);
+     *    Creates a new template object from the contents of the string $string
+     *    The new object's 'global' variables is initialized to the contents of
+     *    the $template_obj's global AND local variables.
+     */
     function LW_Template($arg1, $type = LW_FILENAME, $parent_obj = null)
     {
         if($type == LW_FILENAME)
@@ -101,18 +102,18 @@ class LW_Template
         }
         else
             $this->_halt('LW_Template(): Invalid second argument');
-        
+
         if($parent_obj)
         {
             $this->_globals = array_merge(
                 $parent_obj->_globals, $parent_obj->_locals);
             $this->_origin = $parent_obj->_origin . '::' . $this->_origin;
         }
-        
+
         if ($this->_debug)
         {
             $this->_source = "\n<!-- TEMPLATE BEGIN {$this->_origin} -->\n\n" .
-            $this->_source . "\n<!-- TEMPLATE END {$this->_origin} -->\n";
+                $this->_source . "\n<!-- TEMPLATE END {$this->_origin} -->\n";
         }
     }
     
@@ -127,13 +128,13 @@ class LW_Template
         $pattern =
             "/<!-- BEGIN $quoted -->\n?(.*?)<!-- END $quoted -->\n?/s";
         preg_match($pattern, $this->_source, $matches);
-        
+
         if($replace)
         {
             $this->_source = preg_replace(
                 $pattern, '{' . $block_name . '}', $this->_source, 1);
         }
-        
+
         if(!isset($matches[1]))
         {
             $this->_halt(
@@ -188,8 +189,8 @@ class LW_Template
     {
         /* first parse all the conditionals */
         $pattern = "/<!-- IF (.*?) -->\n?(.*?)" .
-                   "(?:<!-- ELSE \\1 -->\n?(.*?))?" .
-                   "\<!-- ENDIF \\1 -->\n?/s";
+            "(?:<!-- ELSE \\1 -->\n?(.*?))?" .
+            "\<!-- ENDIF \\1 -->\n?/s";
         $str = preg_replace_callback(
             $pattern,
             array($this, '_parse_conditionals_cb'),
@@ -211,7 +212,7 @@ class LW_Template
     {
         $this->_output .= $str;
     }
-    
+
     /**
      * Set output string
      */
@@ -219,7 +220,7 @@ class LW_Template
     {
         $this->_output = $str;
     }
-    
+
     /**
      * get parsed output string
      */
@@ -242,37 +243,38 @@ class LW_Template
     {
         switch($vars)
         {
-          case 'remove':
+        case 'remove':
             $this->_output = preg_replace(
                 '/{[^ \t\r\n}]+}/', '', $this->_output);
             break;
 
-          case 'comment':
+        case 'comment':
             $this->_output = preg_replace(
                 '/{([^ \t\r\n}]+)}/',
                 '<!-- LW_Template : Variable \1 undefined -->',
                 $this->_output);
             break;
 
-          default:
+        default:
             break;
         }
 
         switch($blocks)
         {
-          case 'remove':
+        case 'remove':
             $patterns = array('/<!-- BEGIN .*? -->/', '/<!-- END .*? -->/');
             $this->_output = preg_replace($patterns, '', $this->_output);
             break;
 
-          default:
+        default:
             break;
         }
     }
 
-    /*************************************************************************
+    /**
      * Private methods
      */
+
     /**
      * private callback for preg_replace_callback(), used by parse()
      */
@@ -291,8 +293,8 @@ class LW_Template
         if($block !== '')
         {
             $pattern = "/<!-- IF (.*?) -->\n?(.*?)" .
-                       "(?:<!-- ELSE \\1 -->\n?(.*?))?" .
-                       "<!-- ENDIF \\1 -->\n?/s";
+                "(?:<!-- ELSE \\1 -->\n?(.*?))?" .
+                "<!-- ENDIF \\1 -->\n?/s";
             return preg_replace_callback(
                 $pattern, array($this, '_parse_conditionals_cb'), $block);
         }
@@ -315,7 +317,6 @@ class LW_Template
             return '{' . $varname . '}';
     }
 
-
     function _halt($message)
     {
         $this->_last_error = $message;
@@ -327,4 +328,3 @@ class LW_Template
             die('<b>Halted.</b>');
     }
 }
-?>
