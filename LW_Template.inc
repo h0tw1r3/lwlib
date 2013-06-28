@@ -94,11 +94,13 @@ class LW_Template
                     'does not exist or is empty.');
             }
             $this->_origin = $file_name;
+            $this->_locals['TEMPLATE'] = trim(preg_replace('/[^a-z0-9-]+/', '-', strtolower(basename($this->_origin, '.phpt'))), '-');
         }
         else if($type == LW_STRING)
         {
             $this->_source = $arg1;
             $this->_origin = '<string>';
+            $this->_locals['TEMPLATE'] = 'string';
         }
         else
             $this->_halt('LW_Template(): Invalid second argument');
@@ -162,6 +164,15 @@ class LW_Template
             $this->_locals = array_merge($this->_locals, $varname);
         else
             $this->_locals[$varname] = $value;
+    }
+
+    function appendVar($varname, $value = '')
+    {
+        if (isset($this->_locals[$varname])) {
+            $this->_locals[$varname] .= $value;
+        } else {
+            $this->_locals[$varname] = $value;
+        }
     }
 
     /**
@@ -282,13 +293,55 @@ class LW_Template
     {
         $block = '';
 
-        if(isset($this->_locals[$matches[1]]) ||
-            isset($this->_globals[$matches[1]]))
-        {
-            $block = $matches[2];       /* IF var */
+        /* equality test */
+        if(strpos($matches[1],'=') > 0) {
+            $eq = explode('=', $matches[1]);
+            $test = isset($this->_locals[$eq[0]]) ? $this->_locals[$eq[0]] : @$this->_globals[$eq[0]];
+            if($test == $eq[1]) {          /* IF var=? */
+                $block = $matches[2];
+            } elseif(isset($matches[3])) { /* ELSE var=? */
+                $block = $matches[3];
+            }
+        /* multi-or-isset test */
+        } elseif (strpos($matches[1],'|') > 0) {
+            $found = false;
+            $pieces = explode('|', str_replace(' ', '', $matches[1]));
+            foreach ($pieces as $testvar) {
+                if (isset($this->_locals[$testvar]) ||
+                    isset($this->_globals[$testvar])) {
+                    $found = true; break;
+                }
+            }
+            if ($found) {
+                $block = $matches[2];
+            } else {
+                $block = $matches[3];
+            }
+        /* multi-and-isset test */
+        } elseif (strpos($matches[1],'&') > 0) {
+            $all = true;
+            $pieces = explode('&', str_replace(' ', '', $matches[1]));
+            foreach ($pieces as $testvar) {
+                if (!isset($this->_locals[$testvar]) ||
+                        !isset($this->_globals[$testvar])) {
+                    $all = false; break;
+                }
+            }
+            if ($all) {
+                $block = $matches[2];
+            } else {
+                $block = $matches[3];
+            }
+        /* isset test */
+        } else {
+            if(isset($this->_locals[$matches[1]]) ||
+                isset($this->_globals[$matches[1]]))
+            {
+                $block = $matches[2];       /* IF var */
+            }
+            else if(isset($matches[3]))
+                $block = $matches[3];       /* ELSE */
         }
-        else if(isset($matches[3]))
-            $block = $matches[3];       /* ELSE */
 
         if($block !== '')
         {
@@ -326,5 +379,10 @@ class LW_Template
 
         if($this->halt_on_error == 'yes')
             die('<b>Halted.</b>');
+    }
+
+    /* Clear generated output */
+    function clearOutput() {
+        $this->_output = '';
     }
 }
